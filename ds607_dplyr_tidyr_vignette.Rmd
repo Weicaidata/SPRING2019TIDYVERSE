@@ -138,4 +138,9 @@ summarise(cameras,
 
 The above examples illustrate the differences in how certain common operations in data wrangling are carried out in tidyverse vis-a-vis base R. Hope this vignette helps demonstrate the difference in the 2 approaches.
 
-
+###Filter
+filter() allows you to select a subset of rows in a data frame.
+```{r}
+cameras %>%                                            #select cameras of price less than 500 and release after year 2000.
+     filter(Price<500,Release>2000)
+```
