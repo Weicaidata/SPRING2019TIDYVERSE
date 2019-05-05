@@ -1,0 +1,104 @@
+---
+title: "TidyVerse"
+author: "Weijian Cai"
+date: "May 4, 2019"
+output: html_document
+---
+
+###The tidyverse is a powerfull collecion fo R packages that are great data tools for data transformation and data visualization. 
+###I will cover the ggplot2 packages to show how to make different graphs like line plot, bar plot and  scater plot.And demostate how to custom plots by adding mutiple layers beyond. 
+###The data source I use is from kaggle dataset.
+
+load the core tidyverse package
+```{r}
+library(tidyverse)
+```
+
+load the dataset from a csv file into R.
+```{r}
+url<-"https://raw.githubusercontent.com/Weicaidata/TidyVerse/master/athlete_events.csv"
+url2<-"https://raw.githubusercontent.com/Weicaidata/TidyVerse/master/noc_regions.csv"
+
+
+df<-read_csv(url)
+region<-read_csv(url2)
+head(df)
+head(region)
+```
+###line plot 
+line plot connects the dots in order of the variable present on the x-axis.I will show you how to Create a ggplot line plot below.
+
+####number of athletes by Year and Sex
+
+first we use dplyr to performance data transfermation.
+```{r}
+counts_sex <- df %>% 
+              group_by(Year, Sex) %>%
+              summarize(Athletes = length(unique(ID)))
+counts_sex$Year <- as.integer(counts_sex$Year)
+```
+
+
+basic arguement to create line plot
+```{r}
+ggplot(counts_sex, aes(x=Year, y=Athletes, group=Sex, color=Sex)) +  #assign color based on Sex
+  geom_point(size=2) +                          # to create a line plot
+  geom_line()  +
+  scale_color_manual(values=c("red","blue")) +  # modify color of each lines
+  labs(title = "Number of male and female") +   # add title above the graph
+  theme(plot.title = element_text(hjust = 0.5)) #change theme
+```
+
+####Number of Countries participated over time.
+
+use dply package - filter, arrange, mutate, summarize function to manipulate dataset.
+```{r}
+counts <- df %>%
+          filter(Team != "Unknown") %>%
+          group_by(Year) %>%
+          summarize(Nations = length(unique(Team)))
+```
+
+another example of line plot
+```{r}
+ggplot(counts, aes(x=Year, y=Nations)) +   #initiate plotting
+  geom_point(size=2) +                     #basic line plot parameter
+  geom_line() + 
+  xlab("")
+```
+### Bar plot
+
+####medal winners by country
+```{r}
+medals<- df%>%filter(!is.na(Medal))
+
+medals<- medals%>%left_join(region,by=c("NOC"="NOC"))
+medals$notes = NULL
+medals<-medals%>%
+        group_by(region)%>%
+        summarize(total=n())%>%
+        arrange(desc(total))%>%
+        head(n=20)
+
+medals$region <- factor(medals$region,levels = medals$region[order(medals$total)])
+```
+
+Bar plot example explanation
+```{r}
+ggplot(medals,aes(region,total,color=region,fill=region)) +             #initate ggplot
+  geom_bar(position = "stack",  width =.6,stat="identity") +            #to draw bar geom
+  coord_flip()+                                                         # to make a horizontal bar chart
+  geom_text(aes(label=total,hjust=-.03,  colour="black"),size=3)+       # add text on each bars
+  theme(axis.line = element_line(color = "yellow",size=1))+             # change theme
+      theme(panel.background=element_blank())+             
+      scale_x_discrete() +
+    xlab("Country")+ylab("Medals")+                                     # change x and y axis lable
+  theme(legend.position = "none",
+                     axis.text = element_text(size = 8,face="bold"),
+        plot.title = element_text(size=16,face = "bold")) +  
+  ggtitle("Top medal by Country")                                      # add a title
+```
+
+
+
+
